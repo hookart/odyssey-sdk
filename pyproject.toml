@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "odyssey-sdk"
+name = "hook-odyssey"
 version = "0.1.0"
-description = "Python SDK for Hook's Odyssey Exchange API"
+description = "Hook Odyssey Python SDK"
 authors = ["Regynald Augustin <regy@hook.xyz>"]
 readme = "README.md"
 
