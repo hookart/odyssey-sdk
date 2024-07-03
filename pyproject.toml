@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "odyssey-sdk"
+version = "0.1.0"
+description = "Python SDK for Hook's Odyssey Exchange API"
+authors = ["Regynald Augustin <regy@hook.xyz>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+gql = {extras = ["aiohttp", "websockets"], version = "^3.6.0b0", allow-prereleases = true}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
