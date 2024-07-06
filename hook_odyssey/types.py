@@ -424,4 +424,3 @@ class SigningKeyInput:
 class SignatureInput:
     signatureType: SignatureType
     signature: str
-    signingKeyID: Optional[str]  # TODO: Test if this should be str or int

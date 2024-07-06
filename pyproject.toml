@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 gql = {extras = ["aiohttp", "websockets"], version = "^3.6.0b0", allow-prereleases = true}
+web3 = "^6.20.0"
+pytest = "^8.2.2"
 
 
 [build-system]

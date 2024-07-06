@@ -3,7 +3,7 @@ from typing import AsyncGenerator, List, Optional
 from .config import Environment
 from .exceptions import APIKeyError, OdysseyAPIError, PrivateKeyError
 from .graphql import GraphQLClient
-from .signer import OdysseySigner
+from .signing import OdysseySigner
 from .types import (
     AccountDetails,
     BBOEvent,
@@ -11,6 +11,7 @@ from .types import (
     PerpetualPair,
     PlaceOrderInput,
     SignatureInput,
+    SignatureType,
     StatisticsEvent,
     SubaccountBalanceEvent,
     SubaccountOrderEvent,
@@ -244,6 +245,12 @@ class OdysseyClient:
         if not self._private_key or not self._signer:
             raise PrivateKeyError("No private key provided")
 
+        raw_signature, _ = self._signer.sign_order(order)
+        signature = SignatureInput(
+            signatureType=SignatureType.DIRECT,
+            signature=raw_signature,
+        )
+
         mutation = """
             mutation PlaceOrder(
                 $orderInput: PlaceOrderInput!
@@ -255,7 +262,6 @@ class OdysseyClient:
                 )
             }
         """
-        signature = SignatureInput(**{})
         variables = {"orderInput": order, "signature": signature}
         try:
             await self._graphql_client.execute(mutation, variables)
