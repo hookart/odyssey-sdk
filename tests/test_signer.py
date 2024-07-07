@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 from eth_account import Account
 from eth_account.signers.base import BaseAccount
@@ -5,7 +7,13 @@ from web3 import Web3
 
 from hook_odyssey.config import Environment
 from hook_odyssey.signing import OdysseySigner
-from hook_odyssey.types import OrderDirection, OrderType, PlaceOrderInput, TimeInForce
+from hook_odyssey.types import (
+    OrderDirection,
+    OrderType,
+    PlaceOrderInput,
+    TimeInForce,
+    from_decimal,
+)
 
 
 @pytest.fixture
@@ -31,8 +39,8 @@ def sample_order():
         subaccount=37,
         orderType=OrderType.LIMIT,
         direction=OrderDirection.BUY,
-        size=int(1e18),
-        limitPrice=int(2e18),
+        size=Decimal(1),
+        limitPrice=Decimal(2),
         volatilityBips=0,
         timeInForce=TimeInForce.GTC,
         expiration=0,
@@ -94,7 +102,7 @@ def test_different_orders_produce_different_hashes(signer, sample_order):
 
     # Create a slightly different order
     different_order = PlaceOrderInput(**sample_order.__dict__)
-    different_order.size = int(2e18)
+    different_order.size = from_decimal(Decimal(2))
 
     hash2 = signer.get_order_hash(different_order)
 
