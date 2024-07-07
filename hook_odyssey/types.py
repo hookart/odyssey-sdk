@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
@@ -61,17 +62,37 @@ class SignatureType(Enum):
     EIP1271 = "EIP1271"
 
 
+def from_decimal(value: Decimal) -> int:
+    """
+    Convert a Decimal value to a uint256 integer value with 18 decimal places of precision.
+
+    Example:
+        from_decimal(Decimal('1.5')) returns 1500000000000000000
+    """
+    return int(value * Decimal(10**18))
+
+
+def to_decimal(value: int) -> Decimal:
+    """
+    Convert a uint256 integer value with 18 decimal places of precision to a Decimal value.
+
+    Example:
+        to_decimal(1500000000000000000) returns Decimal('1.5')
+    """
+    return Decimal(value) / Decimal(10**18)
+
+
 ## Note: lower camel case is used for the dataclass field names to match JSON api responses
 
 
 @dataclass
 class TickerEvent:
-    price: int
+    price: Decimal
     timestamp: int
 
     def __init__(self, price: str, timestamp: int):
         try:
-            self.price = int(price)
+            self.price = to_decimal(int(price))
         except ValueError:
             raise ValueError(f"Invalid price: {price}")
         self.timestamp = timestamp
@@ -103,13 +124,13 @@ class StatisticsEvent:
 @dataclass
 class Instrument:
     id: str
-    markPrice: Optional[int]
+    markPrice: Optional[Decimal]
 
     def __init__(self, id: str, markPrice: Optional[str]):
         self.id = id
         if markPrice is not None:
             try:
-                self.markPrice = int(markPrice)
+                self.markPrice = to_decimal(int(markPrice))
             except ValueError:
                 raise ValueError(f"Invalid markPrice: {markPrice}")
         else:
@@ -134,8 +155,8 @@ class BBOEvent:
 @dataclass
 class PriceLevel:
     direction: PriceLevelDirection
-    size: int
-    price: int
+    size: Decimal
+    price: Decimal
 
     def __init__(self, direction: str, size: str, price: str):
         try:
@@ -143,11 +164,11 @@ class PriceLevel:
         except ValueError:
             raise ValueError(f"Invalid direction: {direction}")
         try:
-            self.size = int(size)
+            self.size = to_decimal(int(size))
         except ValueError:
             raise ValueError(f"Invalid size: {size}")
         try:
-            self.price = int(price)
+            self.price = to_decimal(int(price))
         except ValueError:
             raise ValueError(f"Invalid price: {price}")
 
@@ -179,12 +200,12 @@ class OrderbookEvent:
 class Order:
     instrument: Instrument
     direction: OrderDirection
-    size: int
-    remainingSize: int
+    size: Decimal
+    remainingSize: Decimal
     orderHash: str
     status: OrderStatus
     orderType: OrderType
-    limitPrice: Optional[int]
+    limitPrice: Optional[Decimal]
 
     def __init__(
         self,
@@ -203,11 +224,11 @@ class Order:
         except ValueError:
             raise ValueError(f"Invalid direction: {direction}")
         try:
-            self.size = int(size)
+            self.size = to_decimal(int(size))
         except ValueError:
             raise ValueError(f"Invalid size: {size}")
         try:
-            self.remainingSize = int(remainingSize)
+            self.remainingSize = to_decimal(int(remainingSize))
         except ValueError:
             raise ValueError(f"Invalid remainingSize: {remainingSize}")
         self.orderHash = orderHash
@@ -221,7 +242,7 @@ class Order:
             raise ValueError(f"Invalid orderType: {orderType}")
         if limitPrice is not None:
             try:
-                self.limitPrice = int(limitPrice)
+                self.limitPrice = to_decimal(int(limitPrice))
             except ValueError:
                 raise ValueError(f"Invalid limitPrice: {limitPrice}")
         else:
@@ -245,7 +266,7 @@ class SubaccountOrderEvent:
 class Balance:
     subaccount: str
     subaccountID: int
-    balance: int
+    balance: Decimal
     assetName: str
 
     def __init__(
@@ -254,7 +275,7 @@ class Balance:
         self.subaccount = subaccount
         self.subaccountID = subaccountID
         try:
-            self.balance = int(balance)
+            self.balance = to_decimal(int(balance))
         except ValueError:
             raise ValueError(f"Invalid balance: {balance}")
         self.assetName = assetName
@@ -278,9 +299,9 @@ class Position:
     instrument: Instrument
     subaccount: str
     marketHash: str
-    sizeHeld: int
+    sizeHeld: Decimal
     isLong: bool
-    averageCost: int
+    averageCost: Decimal
 
     def __init__(
         self,
@@ -295,12 +316,12 @@ class Position:
         self.subaccount = subaccount
         self.marketHash = marketHash
         try:
-            self.sizeHeld = int(sizeHeld)
+            self.sizeHeld = to_decimal(int(sizeHeld))
         except ValueError:
             raise ValueError(f"Invalid sizeHeld: {sizeHeld}")
         self.isLong = isLong
         try:
-            self.averageCost = int(averageCost)
+            self.averageCost = to_decimal(int(averageCost))
         except ValueError:
             raise ValueError(f"Invalid averageCost: {averageCost}")
 
@@ -324,10 +345,10 @@ class PerpetualPair:
     instrumentHash: str
     symbol: str
     baseCurrency: BaseCurrency
-    minOrderSize: int
-    maxOrderSize: int
-    minOrderSizeIncrement: int
-    minPriceIncrement: int
+    minOrderSize: Decimal
+    maxOrderSize: Decimal
+    minOrderSizeIncrement: Decimal
+    minPriceIncrement: Decimal
     initialMarginBips: int
     preferredSubaccount: int
     subaccount: Optional[int]
@@ -354,19 +375,19 @@ class PerpetualPair:
         except ValueError:
             raise ValueError(f"Invalid baseCurrency: {baseCurrency}")
         try:
-            self.minOrderSize = int(minOrderSize)
+            self.minOrderSize = to_decimal(int(minOrderSize))
         except ValueError:
             raise ValueError(f"Invalid minOrderSize: {minOrderSize}")
         try:
-            self.maxOrderSize = int(maxOrderSize)
+            self.maxOrderSize = to_decimal(int(maxOrderSize))
         except ValueError:
             raise ValueError(f"Invalid maxOrderSize: {maxOrderSize}")
         try:
-            self.minOrderSizeIncrement = int(minOrderSizeIncrement)
+            self.minOrderSizeIncrement = to_decimal(int(minOrderSizeIncrement))
         except ValueError:
             raise ValueError(f"Invalid minOrderSizeIncrement: {minOrderSizeIncrement}")
         try:
-            self.minPriceIncrement = int(minPriceIncrement)
+            self.minPriceIncrement = to_decimal(int(minPriceIncrement))
         except ValueError:
             raise ValueError(f"Invalid minPriceIncrement: {minPriceIncrement}")
         self.initialMarginBips = initialMarginBips
@@ -410,6 +431,37 @@ class PlaceOrderInput:
     nonce: int
     postOnly: Optional[bool]
     reduceOnly: Optional[bool]
+
+    def __init__(
+        self,
+        marketHash: str,
+        instrumentHash: str,
+        subaccount: int,
+        orderType: OrderType,
+        direction: OrderDirection,
+        size: Decimal,
+        limitPrice: Optional[Decimal],
+        volatilityBips: Optional[int],
+        timeInForce: TimeInForce,
+        expiration: Optional[int],
+        nonce: int,
+        postOnly: Optional[bool],
+        reduceOnly: Optional[bool],
+    ):
+        self.marketHash = marketHash
+        self.instrumentHash = instrumentHash
+        self.subaccount = subaccount
+        self.orderType = orderType
+        self.direction = direction
+        self.size = from_decimal(size)
+        if limitPrice is not None:
+            self.limitPrice = from_decimal(limitPrice)
+        self.volatilityBips = volatilityBips
+        self.timeInForce = timeInForce
+        self.expiration = expiration
+        self.nonce = nonce
+        self.postOnly = postOnly
+        self.reduceOnly = reduceOnly
 
 
 @dataclass
