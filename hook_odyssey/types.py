@@ -126,7 +126,7 @@ class Instrument:
     id: str
     markPrice: Optional[Decimal]
 
-    def __init__(self, id: str, markPrice: Optional[str]):
+    def __init__(self, id: str, markPrice: Optional[str] = None):
         self.id = id
         if markPrice is not None:
             try:
@@ -216,7 +216,7 @@ class Order:
         orderHash: str,
         status: str,
         orderType: str,
-        limitPrice: Optional[str],
+        limitPrice: Optional[str] = None,
     ):
         self.instrument = Instrument(**instrument)
         try:
@@ -264,7 +264,7 @@ class SubaccountOrderEvent:
 
 @dataclass
 class Balance:
-    subaccount: str
+    subaccount: int
     subaccountID: int
     balance: Decimal
     assetName: str
@@ -272,7 +272,10 @@ class Balance:
     def __init__(
         self, subaccount: str, subaccountID: int, balance: str, assetName: str
     ):
-        self.subaccount = subaccount
+        try:
+            self.subaccount = int(subaccount)
+        except ValueError:
+            raise ValueError(f"Invalid subaccount: {subaccount}")
         self.subaccountID = subaccountID
         try:
             self.balance = to_decimal(int(balance))
@@ -365,7 +368,7 @@ class PerpetualPair:
         minPriceIncrement: str,
         initialMarginBips: int,
         preferredSubaccount: int,
-        subaccount: Optional[str],
+        subaccount: Optional[str] = None,
     ):
         self.marketHash = marketHash
         self.instrumentHash = instrumentHash
@@ -440,13 +443,13 @@ class PlaceOrderInput:
         orderType: OrderType,
         direction: OrderDirection,
         size: Decimal,
-        limitPrice: Optional[Decimal],
-        volatilityBips: Optional[int],
         timeInForce: TimeInForce,
-        expiration: Optional[int],
-        nonce: int,
-        postOnly: Optional[bool],
-        reduceOnly: Optional[bool],
+        limitPrice: Decimal = Decimal(0),
+        volatilityBips: Optional[int] = None,
+        nonce: int = 0,
+        expiration: int = 0,
+        postOnly: bool = False,
+        reduceOnly: bool = False,
     ):
         self.marketHash = marketHash
         self.instrumentHash = instrumentHash
@@ -454,8 +457,7 @@ class PlaceOrderInput:
         self.orderType = orderType
         self.direction = direction
         self.size = from_decimal(size)
-        if limitPrice is not None:
-            self.limitPrice = from_decimal(limitPrice)
+        self.limitPrice = from_decimal(limitPrice)
         self.volatilityBips = volatilityBips
         self.timeInForce = timeInForce
         self.expiration = expiration

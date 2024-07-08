@@ -41,12 +41,7 @@ def sample_order():
         direction=OrderDirection.BUY,
         size=Decimal(1),
         limitPrice=Decimal(2),
-        volatilityBips=0,
         timeInForce=TimeInForce.GTC,
-        expiration=0,
-        nonce=0,
-        postOnly=False,
-        reduceOnly=False,
     )
 
 
