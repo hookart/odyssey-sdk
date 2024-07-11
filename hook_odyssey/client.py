@@ -17,6 +17,8 @@ from .types import (
     SubaccountOrderEvent,
     SubaccountPositionEvent,
     TickerEvent,
+    TransferHistory,
+    TransferType,
 )
 
 
@@ -283,3 +285,57 @@ class OdysseyClient:
         except Exception:
             raise OdysseyAPIError
         return result.get("cancelOrderV2", False)
+
+    # Transfer History
+    async def transfer_history(
+        self,
+        subaccount: str,
+        market_hash: Optional[str] = None,
+        trasfer_type: Optional[TransferType] = None,
+        cursor: Optional[str] = None,
+    ) -> TransferHistory:
+        if not self._api_key:
+            raise APIKeyError("No API key provided")
+
+        query = """
+            query TransferHistory(
+                $subaccount: BigInt!
+                $marketHash: String
+                $transferType: TransferType
+                $cursor: String
+            ) {
+                transferHistory(
+                    subaccount: $subaccount
+                    marketHash: $marketHash
+                    transferType: $transferType
+                    cursor: $cursor
+                ) {
+                    data {
+                        transactionHash
+                        name
+                        symbol
+                        type
+                        subaccount
+                        amount
+                        price
+                        fees
+                        baseCurrency
+                        fundingRate
+                        isShort
+                        timestamp
+                    }
+                    cursor
+                }
+            }
+        """
+        variables = {
+            "subaccount": subaccount,
+            "marketHash": market_hash,
+            "transferType": trasfer_type.value if trasfer_type else None,
+            "cursor": cursor,
+        }
+        try:
+            result = await self._graphql_client.execute(query, variables)
+        except Exception:
+            raise OdysseyAPIError
+        return TransferHistory(**result["transferHistory"])

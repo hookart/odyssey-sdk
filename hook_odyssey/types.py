@@ -62,6 +62,14 @@ class SignatureType(Enum):
     EIP1271 = "EIP1271"
 
 
+class TransferType(Enum):
+    TRANSFER = "TRANSFER"
+    TRADE = "TRADE"
+    FUNDING = "FUNDING"
+    SETTLEMENT = "SETTLEMENT"
+    LIQUIDATION = "LIQUIDATION"
+
+
 def from_decimal(value: Decimal) -> int:
     """
     Convert a Decimal value to a uint256 integer value with 18 decimal places of precision.
@@ -478,3 +486,59 @@ class SigningKeyInput:
 class SignatureInput:
     signatureType: SignatureType
     signature: str
+
+
+@dataclass
+class TransferHistoryItem:
+    transactionHash: str
+    name: str
+    symbol: str
+    transferType: TransferType  # "type" is a reserved keyword in Python
+    subaccount: int
+    amount: int
+    price: int
+    fees: int
+    baseCurrency: BaseCurrency
+    fundingRate: int
+    isShort: bool
+    timestamp: int
+
+    def __init__(
+        self,
+        transactionHash: str,
+        name: str,
+        symbol: str,
+        transferType: str,
+        subaccount: int,
+        amount: int,
+        price: int,
+        fees: int,
+        baseCurrency: str,
+        fundingRate: int,
+        isShort: bool,
+        timestamp: int,
+    ):
+        self.transactionHash = transactionHash
+        self.name = name
+        self.symbol = symbol
+        try:
+            self.transferType = TransferType(transferType)
+        except ValueError:
+            raise ValueError(f"Invalid transferType: {transferType}")
+        self.subaccount = subaccount
+        self.amount = amount
+        self.price = price
+        self.fees = fees
+        try:
+            self.baseCurrency = BaseCurrency(baseCurrency)
+        except ValueError:
+            raise ValueError(f"Invalid baseCurrency: {baseCurrency}")
+        self.fundingRate = fundingRate
+        self.isShort = isShort
+        self.timestamp = timestamp
+
+
+@dataclass
+class TransferHistory:
+    data: List[TransferHistoryItem]
+    cursor: str
