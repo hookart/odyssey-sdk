@@ -340,4 +340,3 @@ class OdysseyClient:
         except Exception:
             raise OdysseyAPIError
         return TransferHistory(**result["transferHistory"])
-        return TransferHistory(**result["transferHistory"])
