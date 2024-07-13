@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class EventType(Enum):
@@ -308,7 +308,7 @@ class SubaccountBalanceEvent:
 @dataclass
 class Position:
     instrument: Instrument
-    subaccount: str
+    subaccount: int
     marketHash: str
     sizeHeld: Decimal
     isLong: bool
@@ -324,7 +324,7 @@ class Position:
         averageCost: str,
     ):
         self.instrument = Instrument(**instrument)
-        self.subaccount = subaccount
+        self.subaccount = int(subaccount)
         self.marketHash = marketHash
         try:
             self.sizeHeld = to_decimal(int(sizeHeld))
@@ -431,15 +431,15 @@ class AccountDetails:
 class PlaceOrderInput:
     marketHash: str
     instrumentHash: str
-    subaccount: int
+    subaccount: str  # BigInts are represented as strings for go marshalling
     orderType: OrderType
     direction: OrderDirection
-    size: int
-    limitPrice: Optional[int]
+    size: str  # BigInts are represented as strings for go marshalling
+    limitPrice: Optional[str]  # BigInts are represented as strings for go marshalling
     volatilityBips: Optional[int]
     timeInForce: TimeInForce
     expiration: Optional[int]
-    nonce: int
+    nonce: str  # BigInts are represented as strings for go marshalling
     postOnly: Optional[bool]
     reduceOnly: Optional[bool]
 
@@ -452,26 +452,65 @@ class PlaceOrderInput:
         direction: OrderDirection,
         size: Decimal,
         timeInForce: TimeInForce,
-        limitPrice: Decimal = Decimal(0),
+        nonce: int,
+        limitPrice: Optional[Decimal] = None,
         volatilityBips: Optional[int] = None,
-        nonce: int = 0,
-        expiration: int = 0,
+        expiration: Optional[int] = None,
         postOnly: bool = False,
         reduceOnly: bool = False,
     ):
         self.marketHash = marketHash
         self.instrumentHash = instrumentHash
-        self.subaccount = subaccount
+        self.subaccount = str(subaccount)
         self.orderType = orderType
         self.direction = direction
-        self.size = from_decimal(size)
-        self.limitPrice = from_decimal(limitPrice)
-        self.volatilityBips = volatilityBips
+        self.size = str(from_decimal(size))
         self.timeInForce = timeInForce
-        self.expiration = expiration
-        self.nonce = nonce
+        self.nonce = str(nonce)
+        if limitPrice is not None:
+            try:
+                self.limitPrice = str(from_decimal(limitPrice))
+            except ValueError:
+                raise ValueError(f"Invalid limitPrice: {limitPrice}")
+        else:
+            self.limitPrice = None
+        if volatilityBips is not None:
+            try:
+                self.volatilityBips = volatilityBips
+            except ValueError:
+                raise ValueError(f"Invalid volatilityBips: {volatilityBips}")
+        else:
+            self.volatilityBips = None
+        if expiration is not None:
+            try:
+                self.expiration = expiration
+            except ValueError:
+                raise ValueError(f"Invalid expiration: {expiration}")
+        else:
+            self.expiration = None
         self.postOnly = postOnly
         self.reduceOnly = reduceOnly
+
+    def to_dict(self):
+        d = {
+            "marketHash": self.marketHash,
+            "instrumentHash": self.instrumentHash,
+            "subaccount": self.subaccount,
+            "orderType": self.orderType.value,
+            "direction": self.direction.value,
+            "size": self.size,
+            "timeInForce": self.timeInForce.value,
+            "nonce": self.nonce,
+            "postOnly": self.postOnly,
+            "reduceOnly": self.reduceOnly,
+        }
+        if self.limitPrice is not None:
+            d["limitPrice"] = self.limitPrice
+        if self.volatilityBips is not None:
+            d["volatilityBips"] = self.volatilityBips
+        if self.expiration is not None:
+            d["expiration"] = self.expiration
+        return d
 
 
 @dataclass
@@ -486,6 +525,12 @@ class SigningKeyInput:
 class SignatureInput:
     signatureType: SignatureType
     signature: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "signatureType": self.signatureType.value,
+            "signature": self.signature,
+        }
 
 
 @dataclass

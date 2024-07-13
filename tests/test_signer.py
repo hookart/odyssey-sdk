@@ -1,3 +1,4 @@
+from copy import deepcopy
 from decimal import Decimal
 
 import pytest
@@ -42,6 +43,7 @@ def sample_order():
         size=Decimal(1),
         limitPrice=Decimal(2),
         timeInForce=TimeInForce.GTC,
+        nonce=0,
     )
 
 
@@ -96,9 +98,10 @@ def test_different_orders_produce_different_hashes(signer, sample_order):
     hash1 = signer.get_order_hash(sample_order)
 
     # Create a slightly different order
-    different_order = PlaceOrderInput(**sample_order.__dict__)
-    different_order.size = from_decimal(Decimal(2))
+    different_order = deepcopy(sample_order)
+    different_order.size = str(from_decimal(Decimal(2)))
 
     hash2 = signer.get_order_hash(different_order)
 
+    assert hash1 != hash2
     assert hash1 != hash2

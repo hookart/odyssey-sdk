@@ -112,7 +112,7 @@ class OdysseyClient:
             yield OrderbookEvent(**event["orderbook"])
 
     async def subscribe_subaccount_orders(
-        self, subaccount: str
+        self, subaccount: int
     ) -> AsyncGenerator[SubaccountOrderEvent, None]:
         if not self._api_key:
             raise APIKeyError("No API key provided")
@@ -136,7 +136,7 @@ class OdysseyClient:
                 }
             }
         """
-        variables = {"subaccount": subaccount}
+        variables = {"subaccount": str(subaccount)}
         async for event in self._graphql_client.subscribe(query, variables):
             yield SubaccountOrderEvent(**event["subaccountOrders"])
 
@@ -241,7 +241,7 @@ class OdysseyClient:
         return AccountDetails(**result["accountDetails"])
 
     # Place Order
-    async def place_order(self, order: PlaceOrderInput):
+    async def place_order(self, order: PlaceOrderInput) -> bool:
         if not self._api_key:
             raise APIKeyError("No API key provided")
         if not self._private_key or not self._signer:
@@ -264,11 +264,12 @@ class OdysseyClient:
                 )
             }
         """
-        variables = {"orderInput": order, "signature": signature}
+        variables = {"orderInput": order.to_dict(), "signature": signature.to_dict()}
         try:
-            await self._graphql_client.execute(mutation, variables)
+            result = await self._graphql_client.execute(mutation, variables)
         except Exception:
             raise OdysseyAPIError
+        return result.get("placeOrderV2", False)
 
     # Cancel Order
     async def cancel_order(self, order_hash: str) -> bool:
@@ -289,7 +290,7 @@ class OdysseyClient:
     # Transfer History
     async def transfer_history(
         self,
-        subaccount: str,
+        subaccount: int,
         market_hash: Optional[str] = None,
         trasfer_type: Optional[TransferType] = None,
         cursor: Optional[str] = None,
@@ -329,7 +330,7 @@ class OdysseyClient:
             }
         """
         variables = {
-            "subaccount": subaccount,
+            "subaccount": str(subaccount),
             "marketHash": market_hash,
             "transferType": trasfer_type.value if trasfer_type else None,
             "cursor": cursor,
@@ -338,4 +339,5 @@ class OdysseyClient:
             result = await self._graphql_client.execute(query, variables)
         except Exception:
             raise OdysseyAPIError
+        return TransferHistory(**result["transferHistory"])
         return TransferHistory(**result["transferHistory"])
