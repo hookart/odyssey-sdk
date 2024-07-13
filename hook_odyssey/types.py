@@ -587,3 +587,7 @@ class TransferHistoryItem:
 class TransferHistory:
     data: List[TransferHistoryItem]
     cursor: str
+
+    def __init__(self, data: List[dict], cursor: str):
+        self.data = [TransferHistoryItem(**item) for item in data]
+        self.cursor = cursor
