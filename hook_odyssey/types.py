@@ -540,9 +540,9 @@ class TransferHistoryItem:
     symbol: str
     transferType: TransferType  # "type" is a reserved keyword in Python
     subaccount: int
-    amount: int
-    price: int
-    fees: int
+    amount: Decimal
+    price: Decimal
+    fees: Decimal
     baseCurrency: BaseCurrency
     fundingRate: int
     isShort: bool
@@ -571,9 +571,9 @@ class TransferHistoryItem:
         except ValueError:
             raise ValueError(f"Invalid transferType: {transferType}")
         self.subaccount = subaccount
-        self.amount = amount
-        self.price = price
-        self.fees = fees
+        self.amount = to_decimal(amount)
+        self.price = to_decimal(price)
+        self.fees = to_decimal(fees)
         try:
             self.baseCurrency = BaseCurrency(baseCurrency)
         except ValueError:
