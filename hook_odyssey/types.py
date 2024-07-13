@@ -589,5 +589,9 @@ class TransferHistory:
     cursor: str
 
     def __init__(self, data: List[dict], cursor: str):
-        self.data = [TransferHistoryItem(**item) for item in data]
+        self.data = []
+        for item in data:
+            if "type" in item:
+                item["transferType"] = item.pop("type")
+            self.data.append(TransferHistoryItem(**item))
         self.cursor = cursor
